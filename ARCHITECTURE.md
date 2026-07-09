@@ -46,8 +46,8 @@ TypeLock is a macOS menu bar utility that locks your active keyboard input sourc
 │  │  │  │  DistributedNotif│ │  NSWorkspace      │ │  AX Focus Poll │  │   │
 │  │  │  │  Center          │ │  .didActivateApp  │ │  (200ms timer) │  │   │
 │  │  │  │                  │ │                   │ │                │  │   │
-│  │  │  │  "input source   │ │  "frontmost app   │ │  kAXFocusedApp │  │   │
-│  │  │  │   changed"       │ │   changed"        │ │  Attribute     │  │   │
+│  │  │  │  "input source   │ │  "frontmost app   │ │  AX focus attrs│  │   │
+│  │  │  │   changed"       │ │   changed"        │ │  + fallback    │  │   │
 │  │  │  └────────┬─────────┘ └─────────┬─────────┘ └───────┬────────┘  │   │
 │  │  │           │                     │                    │          │   │
 │  │  │           ▼                     ▼                    ▼          │   │
@@ -60,8 +60,8 @@ TypeLock is a macOS menu bar utility that locks your active keyboard input sourc
 │  │  │  │     ├── yes + assigned IM ──► enforce IM                │   │   │
 │  │  │  │     ├── yes + no assignment ► ignore                    │   │   │
 │  │  │  │     └── no ─────────────────► enforce lock              │   │   │
-│  │  │  │  4. debounce 50ms                                       │   │   │
-│  │  │  │     (re-check frontmost app before acting)              │   │   │
+│  │  │  │  4. input changes debounce 50ms                         │   │   │
+│  │  │  │     (activation/focus polling enforce immediately)       │   │   │
 │  │  │  │          │                                              │   │   │
 │  │  │  │          ▼                                              │   │   │
 │  │  │  │  selectSource()                                         │   │   │
@@ -101,7 +101,7 @@ Three listeners run simultaneously, all feeding into the enforcement pipeline:
 
 1. **Input source change** (`DistributedNotificationCenter`) — catches switches made by any process
 2. **App activation** (`NSWorkspace`) — catches app-focus-driven switches, since many apps force an input source on activation
-3. **AX focus polling** (200ms `DispatchSourceTimer`) — catches non-activating panels (Spotlight, Alfred, Raycast, 1Password mini) that steal keyboard focus without firing `didActivateApplicationNotification`. Uses `kAXFocusedApplicationAttribute` via the Accessibility API. Only active when locked AND excluded apps exist. An `NSProcessInfo` activity prevents App Nap from throttling the timer.
+3. **AX focus polling** (200ms `DispatchSourceTimer`) — catches non-activating panels (Spotlight, Alfred, Raycast, 1Password mini) that steal keyboard focus without firing `didActivateApplicationNotification`. It resolves the focused owner from `kAXFocusedWindowAttribute`, then `kAXFocusedApplicationAttribute`, then `kAXFocusedUIElementAttribute`, then falls back to `NSWorkspace.shared.frontmostApplication`. Only active when locked AND excluded apps exist. An `NSProcessInfo` activity prevents App Nap from throttling the timer.
 
 ## Three App Types
 
@@ -118,9 +118,9 @@ Checks prevent unnecessary or recursive enforcement:
 - **`isHandlingChange`** — prevents re-entrant loops (our own `TISSelectInputSource` fires the same notification)
 - **`isLocked`** — all enforcement requires a global lock to be active
 - **Frontmost app context** — debounced work re-checks the frontmost app before acting, preventing enforcement in the wrong app during rapid switching
-- **Bundle ID required** — the focus poller skips processes with no bundle identifier, preventing transient/dying processes from corrupting `currentFrontmostBundleID`
+- **Resolved bundle ID required** — the focus poller only updates `currentFrontmostBundleID` after resolving a bundle identifier from AX ownership or the `NSWorkspace` fallback
 
-A 50ms debounce collapses notification storms. A tracked 150ms re-check timer after each switch (cancelling any previous timer) catches races without overlapping.
+A 50ms debounce collapses input-source-change notification storms. App activation and focus polling enforce immediately. A tracked 150ms re-check timer after each switch (cancelling any previous timer) catches races without overlapping.
 
 ## Startup
 
