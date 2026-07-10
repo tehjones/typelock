@@ -4,6 +4,7 @@ set -euo pipefail
 APP_NAME="TypeLock"
 BUNDLE_ID="com.sergey.typelock"
 VERSION="0.2.1"
+ICON_FILE="Resources/TypeLock.icns"
 if [ -z "${BUILD_NUMBER:-}" ]; then
     if git rev-parse --verify HEAD >/dev/null 2>&1; then
         BUILD_NUMBER="$(printf "%03d" "$(git rev-list --count HEAD)")"
@@ -24,6 +25,9 @@ mkdir -p "$APP_DIR/Contents/Resources"
 # Copy binary
 cp ".build/release/$APP_NAME" "$APP_DIR/Contents/MacOS/$APP_NAME"
 
+# Copy app icon
+cp "$ICON_FILE" "$APP_DIR/Contents/Resources/TypeLock.icns"
+
 # Create Info.plist
 cat > "$APP_DIR/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -34,6 +38,8 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>
     <string>$BUNDLE_ID</string>
+    <key>CFBundleIconFile</key>
+    <string>TypeLock</string>
     <key>CFBundleName</key>
     <string>$APP_NAME</string>
     <key>CFBundleVersion</key>
