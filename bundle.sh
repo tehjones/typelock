@@ -50,6 +50,8 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
+    <key>LSMultipleInstancesProhibited</key>
+    <true/>
     <key>LSUIElement</key>
     <true/>
 </dict>
