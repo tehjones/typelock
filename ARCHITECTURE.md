@@ -2,7 +2,7 @@
 
 ## Overview
 
-TypeLock is a macOS menu bar utility that locks your active keyboard input source and automatically reverts any unwanted switches. Excluded apps can optionally have a specific input method assigned, replacing the need for external tools like Hammerspoon.
+TypeLock is a macOS menu bar utility that applies the correct input method for the active app. It keeps a global default, optional per-app input method assignments, and no-action exclusions, then restores the expected source when macOS or another app changes it.
 
 ## Component Diagram
 
@@ -107,16 +107,16 @@ Three listeners run simultaneously, all feeding into the enforcement pipeline:
 
 | Type | On activation | On external IM change |
 |------|---------------|----------------------|
-| Normal (not excluded) | Enforce global lock | Fight back to global lock |
-| Excluded + assigned IM | Switch to assigned IM | Fight back to assigned IM |
-| Excluded + no assignment | No action | No action |
+| Normal app | Enforce global default | Fight back to global default |
+| App with assigned IM | Switch to assigned IM | Fight back to assigned IM |
+| Excluded app with no assignment | No action | No action |
 
 ## Enforcement Guards
 
 Checks prevent unnecessary or recursive enforcement:
 
 - **`isHandlingChange`** — prevents re-entrant loops (our own `TISSelectInputSource` fires the same notification)
-- **`isLocked`** — all enforcement requires a global lock to be active
+- **`isLocked`** — all enforcement requires a global default to be active
 - **Frontmost app context** — debounced work re-checks the frontmost app before acting, preventing enforcement in the wrong app during rapid switching
 - **Resolved bundle ID required** — the focus poller only updates `currentFrontmostBundleID` after resolving a bundle identifier from AX ownership or the `NSWorkspace` fallback
 
@@ -124,4 +124,4 @@ A 50ms debounce collapses input-source-change notification storms. App activatio
 
 ## Startup
 
-At launch, `currentFrontmostBundleID` is initialized before any enforcement. The `startupSource()` helper determines the correct source — per-app assignment for excluded apps, global lock otherwise. A 3-second retry handles third-party input methods that aren't loaded immediately after reboot.
+At launch, `currentFrontmostBundleID` is initialized before any enforcement. The `startupSource()` helper determines the correct source — per-app assignment when configured, global default otherwise. A 3-second retry handles third-party input methods that aren't loaded immediately after reboot.
