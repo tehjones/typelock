@@ -45,8 +45,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // MARK: - Status Item
 
     private func updateIcon() {
-        let name = inputManager.isLocked ? "lock" : "lock.open"
-        statusItem.button?.image = NSImage(systemSymbolName: name, accessibilityDescription: "TypeLock")
+        let name = inputManager.isLocked ? "lock.fill" : "lock.open"
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: "TypeLock")
+        image?.isTemplate = true
+        statusItem.button?.image = image
+        if let sourceName = inputManager.lockedSourceName {
+            statusItem.button?.toolTip = "TypeLock · \(sourceName)"
+        } else {
+            statusItem.button?.toolTip = inputManager.isLocked ? "TypeLock is on" : "TypeLock is off"
+        }
     }
 
     private func rebuildMenu() {
@@ -54,32 +61,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let menu = NSMenu()
 
         // Status line
-        let statusTitle = inputManager.lockedSourceName.map { "Locked to \($0)" } ?? "Unlocked"
+        let statusTitle: String
+        if let sourceName = inputManager.lockedSourceName {
+            statusTitle = "Locked to \(sourceName)"
+        } else {
+            statusTitle = inputManager.isLocked ? "Locked" : "Unlocked"
+        }
         let statusLabel = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
+        let statusImageName = inputManager.isLocked ? "lock.fill" : "lock.open"
+        statusLabel.image = NSImage(systemSymbolName: statusImageName, accessibilityDescription: nil)
         statusLabel.isEnabled = false
         menu.addItem(statusLabel)
         menu.addItem(.separator())
 
         // Input source list
         for source in inputManager.availableSources {
-            let indicator = inputManager.lockedSourceID == source.id ? "●" : "○"
-            let item = NSMenuItem(title: "\(indicator) \(source.name)", action: #selector(lockToSource(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: source.name, action: #selector(lockToSource(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = source.id
+            item.state = inputManager.lockedSourceID == source.id ? .on : .off
             menu.addItem(item)
         }
         menu.addItem(.separator())
 
         // Unlock (only when locked)
         if inputManager.isLocked {
-            let unlock = NSMenuItem(title: "Unlock", action: #selector(unlockSource), keyEquivalent: "")
+            let unlock = NSMenuItem(title: "Turn Off TypeLock", action: #selector(unlockSource), keyEquivalent: "")
             unlock.target = self
             menu.addItem(unlock)
             menu.addItem(.separator())
         }
 
-        // Excluded Apps
-        let excludedItem = NSMenuItem(title: "Excluded Apps...", action: #selector(showExcludedApps), keyEquivalent: "")
+        // App Rules
+        let excludedItem = NSMenuItem(title: "App Rules…", action: #selector(showExcludedApps), keyEquivalent: "")
         excludedItem.target = self
         menu.addItem(excludedItem)
 
@@ -93,6 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // About
         let about = NSMenuItem(title: "About TypeLock", action: #selector(showAbout), keyEquivalent: "")
         about.target = self
+        about.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: nil)
         menu.addItem(about)
 
         // Quit
@@ -127,13 +142,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         let view = ExcludedAppsView(inputManager: inputManager)
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 420),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
-        window.title = "Excluded Apps"
+        window.title = "App Rules"
         window.contentView = NSHostingView(rootView: view)
+        window.contentMinSize = NSSize(width: 500, height: 340)
+        window.tabbingMode = .disallowed
+        window.setFrameAutosaveName("TypeLockAppRulesWindow")
         window.center()
         window.isReleasedWhenClosed = false
         window.delegate = self
