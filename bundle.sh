@@ -27,6 +27,7 @@ cp ".build/release/$APP_NAME" "$APP_DIR/Contents/MacOS/$APP_NAME"
 
 # Copy app icon
 cp "$ICON_FILE" "$APP_DIR/Contents/Resources/TypeLock.icns"
+cp Resources/MenuBarIcons/*.png "$APP_DIR/Contents/Resources/"
 
 # Create Info.plist
 cat > "$APP_DIR/Contents/Info.plist" << EOF

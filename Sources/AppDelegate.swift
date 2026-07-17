@@ -45,8 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // MARK: - Status Item
 
     private func updateIcon() {
-        let name = inputManager.isLocked ? "lock.fill" : "lock.open"
-        let image = NSImage(systemSymbolName: name, accessibilityDescription: "TypeLock")
+        let resourceName = inputManager.isLocked ? "menu-bar-locked" : "menu-bar-unlocked"
+        let fallbackName = inputManager.isLocked ? "lock.fill" : "lock.open"
+        let image = Bundle.main.image(forResource: NSImage.Name(resourceName))
+            ?? NSImage(systemSymbolName: fallbackName, accessibilityDescription: "TypeLock")
+        image?.size = NSSize(width: 18, height: 18)
         image?.isTemplate = true
         statusItem.button?.image = image
         if let sourceName = inputManager.lockedSourceName {
