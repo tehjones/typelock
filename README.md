@@ -47,7 +47,7 @@ On first launch, allow TypeLock in **System Settings → Privacy & Security → 
 2. Choose an input method, such as **ABC**, as the global default.
 3. TypeLock now restores that input method whenever another app or macOS changes it.
 4. Open **App Rules…** to configure exceptions or app-specific input methods.
-5. Choose **Turn Off TypeLock** when you want macOS to manage input methods normally.
+5. Quit TypeLock when you want macOS to manage input methods normally.
 
 ## App Rules
 
@@ -63,7 +63,7 @@ Open **App Rules…**, click **Add App…**, then choose what TypeLock should do
 
 TypeLock watches input-source changes, app activation, and focused-app changes. It resolves the active app and applies that app's assigned input method, the global default, or no action for unmanaged apps.
 
-Settings stay in macOS `UserDefaults`. **Launch at Login** uses a local LaunchAgent.
+Settings stay in macOS `UserDefaults`. **Launch at Login** uses macOS Service Management.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for implementation details.
 
@@ -103,7 +103,13 @@ Build a release app bundle:
 ./bundle.sh
 ```
 
-The bundle is created at `TypeLock.app` in the project directory.
+The bundle is created at `TypeLock.app` in the project directory. By default it
+uses an ad-hoc signature, so Accessibility permission must be granted again
+after changed builds. Use a stable signing identity to preserve permission:
+
+```sh
+TYPELOCK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./bundle.sh
+```
 
 ## Sponsor
 

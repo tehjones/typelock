@@ -19,6 +19,8 @@ final class InputSourceManager: ObservableObject {
     private var isHandlingChange = false
     private var debounceWorkItem: DispatchWorkItem?
     private var recheckWorkItem: DispatchWorkItem?
+    private var startupRetryWorkItem: DispatchWorkItem?
+    private var isStarted = false
     private var currentFrontmostBundleID: String?
     private var excludedBundleIDs: Set<String> = []
     private var excludedAppInputSources: [String: String] = [:]  // bundleID -> inputSourceID
@@ -46,6 +48,8 @@ final class InputSourceManager: ObservableObject {
     // MARK: - Lifecycle
 
     func start() {
+        guard !isStarted else { return }
+        isStarted = true
         loadExcludedApps()
         refreshSources()
         currentFrontmostBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
@@ -56,9 +60,13 @@ final class InputSourceManager: ObservableObject {
                 selectSource(sourceID)
             } else if !availableSources.contains(where: { $0.id == saved }) {
                 // Third-party input method may not be loaded yet after reboot
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-                    self?.retryLock()
+                let retry = DispatchWorkItem { [weak self] in
+                    guard let self, self.isStarted else { return }
+                    self.startupRetryWorkItem = nil
+                    self.retryLock()
                 }
+                startupRetryWorkItem = retry
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: retry)
             }
         }
         startMonitoring()
@@ -85,10 +93,15 @@ final class InputSourceManager: ObservableObject {
     }
 
     func stop() {
+        isStarted = false
         stopMonitoring()
         stopAppActivationObserver()
         stopFocusPolling()
+        startupRetryWorkItem?.cancel()
+        startupRetryWorkItem = nil
         recheckWorkItem?.cancel()
+        recheckWorkItem = nil
+        isHandlingChange = false
     }
 
     // MARK: - Sources
@@ -187,6 +200,7 @@ final class InputSourceManager: ObservableObject {
     }
 
     private func selectSource(_ sourceID: String) {
+        guard isStarted else { return }
         guard let cfList = TISCreateInputSourceList(nil, false)?.takeRetainedValue() as? [TISInputSource] else { return }
         guard let target = cfList.first(where: { $0.id == sourceID }) else { return }
 

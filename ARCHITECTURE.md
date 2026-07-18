@@ -82,8 +82,8 @@ TypeLock is a macOS menu bar utility that applies the correct input method for t
 │  │  • excludedApps   (JSON: [{bundleID, name, inputSourceID?}])      │   │
 │  └───────────────────────────────────────────────────────────────────┘   │
 │  ┌───────────────────────────────────────────────────────────────────┐   │
-│  │  ~/Library/LaunchAgents/com.sergey.typelock.plist                  │   │
-│  │  (launch at login)                                                │   │
+│  │  SMAppService.mainApp                                             │   │
+│  │  (launch at login; migrates the legacy LaunchAgent)               │   │
 │  └───────────────────────────────────────────────────────────────────┘   │
 │                                                                          │
 │  macOS APIs                                                              │
@@ -125,3 +125,5 @@ A 50ms debounce collapses input-source-change notification storms. App activatio
 ## Startup
 
 At launch, `currentFrontmostBundleID` is initialized before any enforcement. The `startupSource()` helper determines the correct source — per-app assignment when configured, global default otherwise. A 3-second retry handles third-party input methods that aren't loaded immediately after reboot.
+
+TypeLock starts enforcement only after Accessibility permission is granted. Until then, the menu exposes only setup, About, and Quit. A setup window links directly to System Settings and updates automatically when permission changes. Revoking permission pauses enforcement without deleting the saved default or app rules.

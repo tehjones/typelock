@@ -5,6 +5,7 @@ APP_NAME="TypeLock"
 BUNDLE_ID="com.sergey.typelock"
 VERSION="0.2.1"
 ICON_FILE="Resources/TypeLock.icns"
+SIGNING_IDENTITY="${TYPELOCK_SIGNING_IDENTITY:--}"
 if [ -z "${BUILD_NUMBER:-}" ]; then
     if git rev-parse --verify HEAD >/dev/null 2>&1; then
         BUILD_NUMBER="$(printf "%03d" "$(git rev-list --count HEAD)")"
@@ -58,6 +59,13 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
 </dict>
 </plist>
 EOF
+
+if [ "$SIGNING_IDENTITY" = "-" ]; then
+    echo "WARNING: Signing ad hoc. Accessibility permission will not survive changed builds."
+    echo "Set TYPELOCK_SIGNING_IDENTITY to a stable code-signing identity to preserve it."
+fi
+
+codesign --force --sign "$SIGNING_IDENTITY" "$APP_DIR"
 
 echo "Built $APP_DIR version $VERSION ($BUILD_NUMBER)"
 echo ""
