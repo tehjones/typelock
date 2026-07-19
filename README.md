@@ -6,6 +6,8 @@ TypeLock is a lightweight macOS menu bar app that keeps the right input method a
 
 TypeLock works on macOS Ventura 13 or higher.
 
+![TypeLock menu and App Rules window](assets/typelock-demo.png)
+
 - [Features](#features)
 - [Why TypeLock Exists](#why-typelock-exists)
 - [Install](#install)
