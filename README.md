@@ -12,8 +12,9 @@ TypeLock works on macOS Ventura 13 or higher.
 - [App Rules](#app-rules)
 - [How It Works](#how-it-works)
 - [FAQ](#faq)
+- [Motivation](#motivation)
 - [Development](#development)
-- [Sponsor](#sponsor)
+- [Sponsors](#sponsors)
 - [License](#license)
 
 ## Features
@@ -39,7 +40,7 @@ cp -R TypeLock.app /Applications/
 open /Applications/TypeLock.app
 ```
 
-On first launch, allow TypeLock in **System Settings → Privacy & Security → Accessibility**. TypeLock needs this permission to identify which app or panel owns keyboard focus.
+On first launch, TypeLock opens **Set Up TypeLock**. Click **Allow…** to grant Accessibility permission. If needed, click **Open System Settings…**, then allow TypeLock in **Privacy & Security → Accessibility**. TypeLock needs this permission to identify which app or panel owns keyboard focus.
 
 ## Usage
 
@@ -89,6 +90,12 @@ Open **App Rules…**, add the app, and select its input method. That choice ove
 
 Choose **Launch at Login** from the TypeLock menu.
 
+## Motivation
+
+People who type in more than one language hit the same interruption all day: switch apps, start typing, and discover that macOS kept the wrong input method. Correcting it takes seconds, but it breaks concentration every time.
+
+TypeLock exists to make input methods predictable. Set a default, define the few apps that need different behavior, and stop thinking about the input menu. It stays small, native, and local because this problem should not require a broad automation tool or cloud service.
+
 ## Development
 
 Build the executable:
@@ -111,9 +118,9 @@ after changed builds. Use a stable signing identity to preserve permission:
 TYPELOCK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./bundle.sh
 ```
 
-## Sponsor
+## Sponsors
 
-TypeLock is sponsored by [Musing Image](https://musingimage.com/).
+TypeLock is sponsored by [EzTranslate](https://eztranslate.com.tw/) and [Musing Image](https://musingimage.com/).
 
 ## License
 
