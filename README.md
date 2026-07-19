@@ -7,26 +7,33 @@ TypeLock is a lightweight macOS menu bar app that keeps the right input method a
 TypeLock works on macOS Ventura 13 or higher.
 
 - [Features](#features)
+- [Why TypeLock Exists](#why-typelock-exists)
 - [Install](#install)
 - [Usage](#usage)
 - [App Rules](#app-rules)
-- [How It Works](#how-it-works)
-- [FAQ](#faq)
-- [Motivation](#motivation)
 - [Development](#development)
+- [FAQ](#faq)
 - [Sponsors](#sponsors)
 - [License](#license)
 
 ## Features
 
-- Set a global default input method from the menu bar.
-- Assign a specific input method to individual apps.
-- Leave selected apps unmanaged.
-- Restore the expected input method after unwanted switches.
-- Handle non-activating panels such as Raycast and 1Password Quick Access.
-- Launch automatically when you log in.
-- Keep all settings local, with no accounts or analytics.
-- Use a native, lightweight, open-source macOS app.
+- Choose your default input method.
+- Choose a different input method for any app that needs one.
+- TypeLock switches input methods automatically as you move between apps.
+- Lightweight and built for macOS.
+
+## Why TypeLock Exists
+
+I work and study in English almost all the time, but I chat with many of my friends and family in Chinese. So my Mac needs two input methods: ABC for English and a Chinese input method for conversations.
+
+macOS can switch between them, but not in the way I want. There is no simple Shift-only toggle, and the built-in switch feels noticeably slow. Every move between work and chat becomes a small interruption.
+
+WeType gets close to perfect. It lets me type in both Chinese and English, and switch between them with a tap of Shift. That is exactly what I want in chat apps.
+
+But in apps where I only ever type English, the same shortcut becomes a problem. In Ghostty, a stray tap of Shift can switch WeType back to Chinese. Then my next command starts with the wrong characters, and I have to stop, delete them, and switch back.
+
+I built TypeLock to make that impossible. WeType stays as my default for everyday typing, while Ghostty is always locked to ABC. TypeLock switches automatically when I move between apps, so each one is ready for the kind of typing I do there.
 
 ## Install
 
@@ -40,15 +47,12 @@ cp -R TypeLock.app /Applications/
 open /Applications/TypeLock.app
 ```
 
-On first launch, TypeLock opens **Set Up TypeLock**. Click **Allow…** to grant Accessibility permission. If needed, click **Open System Settings…**, then allow TypeLock in **Privacy & Security → Accessibility**. TypeLock needs this permission to identify which app or panel owns keyboard focus.
-
 ## Usage
 
 1. Click the TypeLock icon in the menu bar.
 2. Choose an input method, such as **ABC**, as the global default.
 3. TypeLock now restores that input method whenever another app or macOS changes it.
 4. Open **App Rules…** to configure exceptions or app-specific input methods.
-5. Quit TypeLock when you want macOS to manage input methods normally.
 
 ## App Rules
 
@@ -60,13 +64,29 @@ Open **App Rules…**, click **Add App…**, then choose what TypeLock should do
 | Specific input method | Override the global default while that app has focus. |
 | **Don’t Enforce** | Let the app manage its own input method. |
 
-## How It Works
-
-TypeLock watches input-source changes, app activation, and focused-app changes. It resolves the active app and applies that app's assigned input method, the global default, or no action for unmanaged apps.
-
-Settings stay in macOS `UserDefaults`. **Launch at Login** uses macOS Service Management.
+## Development
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for implementation details.
+
+Build the executable:
+
+```sh
+swift build
+```
+
+Build a release app bundle:
+
+```sh
+./bundle.sh
+```
+
+The bundle is created at `TypeLock.app` in the project directory. By default it
+uses an ad-hoc signature, so Accessibility permission must be granted again
+after changed builds. Use a stable signing identity to preserve permission:
+
+```sh
+TYPELOCK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./bundle.sh
+```
 
 ## FAQ
 
@@ -89,34 +109,6 @@ Open **App Rules…**, add the app, and select its input method. That choice ove
 ### How do I start TypeLock automatically?
 
 Choose **Launch at Login** from the TypeLock menu.
-
-## Motivation
-
-People who type in more than one language hit the same interruption all day: switch apps, start typing, and discover that macOS kept the wrong input method. Correcting it takes seconds, but it breaks concentration every time.
-
-TypeLock exists to make input methods predictable. Set a default, define the few apps that need different behavior, and stop thinking about the input menu. It stays small, native, and local because this problem should not require a broad automation tool or cloud service.
-
-## Development
-
-Build the executable:
-
-```sh
-swift build
-```
-
-Build a release app bundle:
-
-```sh
-./bundle.sh
-```
-
-The bundle is created at `TypeLock.app` in the project directory. By default it
-uses an ad-hoc signature, so Accessibility permission must be granted again
-after changed builds. Use a stable signing identity to preserve permission:
-
-```sh
-TYPELOCK_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./bundle.sh
-```
 
 ## Sponsors
 
